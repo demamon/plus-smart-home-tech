@@ -11,7 +11,7 @@ import ru.yandex.practicum.service.SensorEventHandler;
 @RequiredArgsConstructor
 @Slf4j
 public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> implements SensorEventHandler {
-    protected final KafkaEventProducer producer;
+    protected final KafkaEventProducer<SensorEventAvro> producer;
 
     protected abstract T mapToAvro(SensorEvent event);
 
@@ -31,6 +31,6 @@ public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> imple
                 .build();
 
         log.info("Сообщение для отправки: {}", eventAvro);
-        producer.send("telemetry.sensors.v1", eventAvro);
+        producer.sendToSensorTopic(eventAvro);
     }
 }

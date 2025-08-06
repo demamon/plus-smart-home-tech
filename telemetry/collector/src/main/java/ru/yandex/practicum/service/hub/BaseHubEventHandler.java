@@ -11,7 +11,7 @@ import ru.yandex.practicum.service.HubEventHandler;
 @RequiredArgsConstructor
 @Slf4j
 public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
-    protected final KafkaEventProducer producer;
+    protected final KafkaEventProducer<HubEventAvro> producer;
 
     protected abstract T mapToAvro(HubEvent event);
 
@@ -30,6 +30,6 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
                 .build();
 
         log.info("Сообщение для отправки: {}", eventAvro);
-        producer.send("telemetry.hubs.v1", eventAvro);
+        producer.sendToHubTopic(eventAvro);
     }
 }

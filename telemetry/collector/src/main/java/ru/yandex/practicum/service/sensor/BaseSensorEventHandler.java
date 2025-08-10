@@ -3,30 +3,39 @@ package ru.yandex.practicum.service.sensor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.kafka.KafkaEventProducer;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
-import ru.yandex.practicum.model.SensorEvent;
 import ru.yandex.practicum.service.SensorEventHandler;
+
+import java.time.Instant;
 
 @RequiredArgsConstructor
 @Slf4j
 public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> implements SensorEventHandler {
     protected final KafkaEventProducer<SensorEventAvro> producer;
 
-    protected abstract T mapToAvro(SensorEvent event);
+    protected abstract T mapToAvro(SensorEventProto event);
 
     @Override
-    public void handle(SensorEvent event) {
-        if (!event.getType().equals(getMessageType())) {
-            throw new IllegalArgumentException(String.format("Неизвестный тип события: %s", event.getType()));
+    public abstract SensorEventProto.PayloadCase getMessageType();
+
+    @Override
+    public void handle(SensorEventProto event) {
+        if (!event.getPayloadCase().equals(getMessageType())) {
+            throw new IllegalArgumentException(String.format("Неизвестный тип события: %s", event.getPayloadCase()));
         }
 
         T payload = mapToAvro(event);
 
+        Instant timestamp = event.hasTimestamp()
+                ? Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos())
+                : Instant.now();
+
         SensorEventAvro eventAvro = SensorEventAvro.newBuilder()
                 .setId(event.getId())
                 .setHubId(event.getHubId())
-                .setTimestamp(event.getTimestamp())
+                .setTimestamp(timestamp)
                 .setPayload(payload)
                 .build();
 

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.grpc;
+package ru.yandex.practicum.controller;
 
 import com.google.protobuf.Empty;
 import io.grpc.Status;
@@ -18,12 +18,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @GrpcService
-public class EventController extends CollectorControllerGrpc.CollectorControllerImplBase {
+public class CollectorController extends CollectorControllerGrpc.CollectorControllerImplBase {
 
     private final Map<HubEventProto.PayloadCase, HubEventHandler> hubEventHandlers;
     private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorEventHandlers;
 
-    public EventController(Set<HubEventHandler> hubEventHandlers, Set<SensorEventHandler> sensorEventHandlers) {
+
+    public CollectorController(Set<HubEventHandler> hubEventHandlers, Set<SensorEventHandler> sensorEventHandlers) {
         this.hubEventHandlers = hubEventHandlers.stream()
                 .collect(Collectors.toMap(HubEventHandler::getMessageType, Function.identity()));
         this.sensorEventHandlers = sensorEventHandlers.stream()

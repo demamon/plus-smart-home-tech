@@ -1,16 +1,11 @@
 package ru.yandex.practicum.service.hub;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.ScenarioAddedEventProto;
 import ru.yandex.practicum.kafka.KafkaEventProducer;
 import ru.yandex.practicum.kafka.telemetry.event.*;
-import ru.yandex.practicum.mapper.EnumMapper;
-import ru.yandex.practicum.model.HubEvent;
-import ru.yandex.practicum.model.hub.DeviceAction;
-import ru.yandex.practicum.model.hub.ScenarioAddedEvent;
-import ru.yandex.practicum.model.hub.ScenarioCondition;
-import ru.yandex.practicum.model.hub.enums.HubEventType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -21,44 +16,38 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAdded
     }
 
     @Override
-    public HubEventType getMessageType() {
-        return HubEventType.SCENARIO_ADDED;
+    public HubEventProto.PayloadCase getMessageType() {
+
+        return HubEventProto.PayloadCase.SCENARIO_ADDED;
     }
 
     @Override
-    protected ScenarioAddedEventAvro mapToAvro(HubEvent event) {
-        ScenarioAddedEvent _event = (ScenarioAddedEvent) event;
+    protected ScenarioAddedEventAvro mapToAvro(HubEventProto event) {
+        ScenarioAddedEventProto scenarioAddedEventProto = event.getScenarioAdded();
+        List<ScenarioConditionAvro> conditions = scenarioAddedEventProto.getConditionList().stream()
+                .map(s -> ScenarioConditionAvro.newBuilder()
+                        .setSensorId(s.getSensorId())
+                        .setType(ConditionTypeAvro.valueOf(s.getType().name()))
+                        .setOperation(ConditionOperationAvro.valueOf(s.getOperation().name()))
+                        .setValue(switch (s.getValueCase()) {
+                            case BOOL_VALUE -> s.getBoolValue();
+                            case INT_VALUE -> s.getIntValue();
+                            default -> null;
+                        })
+                        .build())
+                .toList();
+        List<DeviceActionAvro> actions = scenarioAddedEventProto.getActionList().stream()
+                .map(a -> DeviceActionAvro.newBuilder()
+                        .setSensorId(a.getSensorId())
+                        .setType(ActionTypeAvro.valueOf(a.getType().name()))
+                        .setValue(a.getValue())
+                        .build())
+                .toList();
+
         return ScenarioAddedEventAvro.newBuilder()
-                .setName(_event.getName())
-                .setConditions(mapConditionsToAvro(_event.getConditions()))
-                .setActions(mapActionsToAvro(_event.getActions()))
+                .setName(scenarioAddedEventProto.getName())
+                .setConditions(conditions)
+                .setActions(actions)
                 .build();
-    }
-
-    private List<ScenarioConditionAvro> mapConditionsToAvro(List<ScenarioCondition> conditions) {
-        List<ScenarioConditionAvro> listAvro = new ArrayList<>();
-        for (ScenarioCondition condition : conditions) {
-            ScenarioConditionAvro conditionAvro = ScenarioConditionAvro.newBuilder()
-                    .setSensorId(condition.getSensorId())
-                    .setType(EnumMapper.mapEnum(condition.getType(), ConditionTypeAvro.class))
-                    .setOperation(EnumMapper.mapEnum(condition.getOperation(), ConditionOperationAvro.class))
-                    .setValue(condition.getValue())
-                    .build();
-            listAvro.add(conditionAvro);
-        }
-        return listAvro;
-    }
-
-    private List<DeviceActionAvro> mapActionsToAvro(List<DeviceAction> actions) {
-        List<DeviceActionAvro> listAvro = new ArrayList<>();
-        for (DeviceAction action : actions) {
-            DeviceActionAvro actionAvro = DeviceActionAvro.newBuilder()
-                    .setSensorId(action.getSensorId())
-                    .setType(EnumMapper.mapEnum(action.getType(), ActionTypeAvro.class))
-                    .setValue(action.getValue())
-                    .build();
-            listAvro.add(actionAvro);
-        }
-        return listAvro;
     }
 }

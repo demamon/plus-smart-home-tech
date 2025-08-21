@@ -18,9 +18,9 @@ public class KafkaAvroConsumer {
 
     private final Consumer<String, SensorEventAvro> consumer;
 
-    public KafkaAvroConsumer(@Value("${kafka.bootstrap.servers}") String bootstrapServers,
-                             @Value("${kafka.consumer.auto-offset-reset}") String autoOffsetReset,
-                             @Value("${kafka.consumer.topic.sensor-events}") String topic) {
+    public KafkaAvroConsumer(@Value("${aggregator.kafka.consumer.bootstrap.servers}") String bootstrapServers,
+                             @Value("${aggregator.kafka.consumer.auto-offset-reset}") String autoOffsetReset,
+                             @Value("${aggregator.kafka.consumer.topic.sensor-events}") String topic) {
         Properties config = new Properties();
 
         config.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());

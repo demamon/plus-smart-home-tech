@@ -4,13 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.aggregator.deserializer.SensorEventDeserializer;
+import ru.yandex.practicum.aggregator.config.KafkaPropertiesConfig;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -18,17 +17,11 @@ public class KafkaAvroConsumer {
 
     private final Consumer<String, SensorEventAvro> consumer;
 
-    public KafkaAvroConsumer(@Value("${aggregator.kafka.consumer.bootstrap.servers}") String bootstrapServers,
-                             @Value("${aggregator.kafka.consumer.auto-offset-reset}") String autoOffsetReset,
+    public KafkaAvroConsumer(KafkaPropertiesConfig kafkaProperties,
                              @Value("${aggregator.kafka.consumer.topic.sensor-events}") String topic) {
         Properties config = new Properties();
 
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-
-        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringDeserializer.class);
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SensorEventDeserializer.class);
+        config.putAll(kafkaProperties.getConsumer());
 
         this.consumer = new KafkaConsumer<>(config);
         this.consumer.subscribe(List.of(topic));

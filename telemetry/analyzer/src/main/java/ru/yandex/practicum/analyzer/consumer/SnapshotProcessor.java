@@ -98,6 +98,7 @@ public class SnapshotProcessor implements Runnable {
     }
 
     private void handleRecord(ConsumerRecord<String, SensorsSnapshotAvro> record) {
+        log.info("Received snapshot for hub: {}", record.value().getHubId());
         snapshotService.handleSnapshot(record.value());
     }
 

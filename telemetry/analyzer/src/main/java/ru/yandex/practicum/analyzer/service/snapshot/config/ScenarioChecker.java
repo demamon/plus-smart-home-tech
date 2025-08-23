@@ -19,16 +19,21 @@ public class ScenarioChecker {
     private final ActionExecutor actionExecutor;
 
     public void executeScenario(Scenario scenario, Map<String, SensorStateAvro> sensorsState, Instant timestamp) {
+        log.info("Checking scenario '{}' for hub {}", scenario.getName(), scenario.getHubId());
         try {
             boolean allConditionsMet = scenario.getConditions().entrySet().stream()
                     .allMatch(entry -> {
                         String sensorId = entry.getKey();
                         Condition condition = entry.getValue();
                         SensorStateAvro state = sensorsState.get(sensorId);
-                        return state != null && conditionChecker.checkCondition(condition, state.getData());
+                        boolean conditionMet = state != null && conditionChecker.checkCondition(condition, state.getData());
+                        log.info("Condition for sensor {}: {} = {}", sensorId, condition, conditionMet);
+
+                        return conditionMet;
                     });
 
             if (allConditionsMet) {
+                log.info("All conditions met for scenario '{}'", scenario.getName());
                 scenario.getActions().forEach((sensorId, action) ->
                         actionExecutor.executeAction(sensorId, action, scenario.getHubId(), scenario.getName(), timestamp)
                 );

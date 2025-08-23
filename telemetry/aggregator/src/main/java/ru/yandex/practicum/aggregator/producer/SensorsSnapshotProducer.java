@@ -18,8 +18,10 @@ public class SensorsSnapshotProducer {
     private final Producer<String, SensorsSnapshotAvro> producer;
 
     public void send(String topic, String key, SensorsSnapshotAvro message) {
+        log.info("Attempting to send snapshot to topic: {}, hubId: {}", topic, key);
         ProducerRecord<String, SensorsSnapshotAvro> record = new ProducerRecord<>(topic, key, message);
         producer.send(record, callback(key));
+        log.info("Snapshot sent successfully to topic: {}, hubId: {}", topic, key);
     }
 
     private Callback callback(String key) {

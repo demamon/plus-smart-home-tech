@@ -18,7 +18,7 @@ public class SensorEventConsumerRunner {
     private final SensorEventHandler eventHandler;
     private final KafkaConsumer<String, SensorEventAvro> consumer;
     private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
-    @Value("${aggregator.kafka.consumer.topic.sensor-events}")
+    @Value("${topic.sensor-events}")
     private String subscribeTopic;
 
     public void start() {

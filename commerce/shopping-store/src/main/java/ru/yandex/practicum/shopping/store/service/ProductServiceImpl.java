@@ -80,6 +80,6 @@ public class ProductServiceImpl implements ProductService {
     private Product findByIdProduct(UUID uuid) {
         log.info("проверяем существование товара");
         return productRepository.findById(uuid)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product with id = " + uuid + " not found"));
     }
 }

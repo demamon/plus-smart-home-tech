@@ -48,7 +48,8 @@ public class WarehouseServiceImpl implements WarehouseService {
     public void addProductToWarehouse(AddProductToWarehouseRequest addProductToWarehouseRequest) {
 
         Warehouse warehouse = warehouseRepository.findById(addProductToWarehouseRequest.getProductId()).orElseThrow(
-                () -> new NoSpecifiedProductInWarehouseException("Нет информации о товаре на складе.")
+                () -> new NoSpecifiedProductInWarehouseException("Нет информации о товаре на складе с id = "
+                        + addProductToWarehouseRequest.getProductId() + " .")
         );
 
         warehouse.setQuantity(warehouse.getQuantity() + addProductToWarehouseRequest.getQuantity());

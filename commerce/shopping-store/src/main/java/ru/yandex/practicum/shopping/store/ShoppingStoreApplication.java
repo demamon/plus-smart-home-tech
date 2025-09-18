@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
+@EnableFeignClients("ru.yandex.practicum.interaction.api.feign")
 public class ShoppingStoreApplication {
     public static void main(String[] args) {
         SpringApplication.run(ShoppingStoreApplication.class, args);

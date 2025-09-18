@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.interaction.api.dto.cart.ChangeProductQuantityRequest;
-import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartResponseDto;
+import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartDto;
 import ru.yandex.practicum.interaction.api.feign.WarehouseClient;
 import ru.yandex.practicum.shopping.cart.exception.NoProductsInShoppingCartException;
 import ru.yandex.practicum.shopping.cart.mapper.ShoppingCartMapper;
@@ -26,7 +26,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final WarehouseClient warehouseClient;
 
     @Override
-    public ShoppingCartResponseDto addProducts(String username, Map<UUID, Integer> request) {
+    public ShoppingCartDto addProducts(String username, Map<UUID, Integer> request) {
         ShoppingCart shoppingCart = getActiveCartByUsername(username);
         shoppingCart.setProducts(request);
         warehouseClient.checkCountProducts(shoppingCartMapper.toResponseDto(shoppingCart));
@@ -35,7 +35,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    public ShoppingCartResponseDto getShoppingCart(String username) {
+    public ShoppingCartDto getShoppingCart(String username) {
         return shoppingCartMapper.toResponseDto(getActiveCartByUsername(username));
     }
 
@@ -47,7 +47,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Override
-    public ShoppingCartResponseDto removeProductsFromCart(String username, List<UUID> productId) {
+    public ShoppingCartDto removeProductsFromCart(String username, List<UUID> productId) {
         if (productId == null || productId.isEmpty()) {
             throw new IllegalArgumentException("Список товаров для удаления не может быть пустым");
         }
@@ -61,7 +61,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return shoppingCartMapper.toResponseDto(shoppingCart);
     }
 
-    public ShoppingCartResponseDto changeProductQuantity(String username, ChangeProductQuantityRequest request) {
+    @Override
+    public ShoppingCartDto changeProductQuantity(String username, ChangeProductQuantityRequest request) {
         ShoppingCart shoppingCart = validateAndGetCartWithProducts(username, List.of(request.getProductId()));
         Map<UUID, Integer> products = shoppingCart.getProducts();
         if (request.getNewQuantity() == 0) {
@@ -72,6 +73,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCartRepository.save(shoppingCart);
         return shoppingCartMapper.toResponseDto(shoppingCart);
 
+    }
+
+    @Override
+    public List<ShoppingCartDto> getAllShoppingCartByName(String username) {
+        List <ShoppingCart> shoppingCarts = shoppingCartRepository.findAllByUsername(username);
+        return shoppingCarts.stream()
+                .map(shoppingCartMapper::toResponseDto)
+                .toList();
     }
 
     private ShoppingCart getActiveCartByUsername(String username) {

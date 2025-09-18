@@ -1,19 +1,19 @@
 package ru.yandex.practicum.interaction.api.dto.warehouse;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookedProductsDto {
-    @NonNull
+    @NotNull
     Double deliveryWeight;
-    @NonNull
+    @NotNull
     Double deliveryVolume;
-    @NonNull
+    @NotNull
     Boolean fragile;
 }

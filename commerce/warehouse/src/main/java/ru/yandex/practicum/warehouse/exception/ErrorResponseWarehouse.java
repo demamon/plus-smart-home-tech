@@ -48,9 +48,10 @@ public class ErrorResponseWarehouse {
                 .build();
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({ProductNotFoundInWarehouseException.class,
+            NoBookingFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleProductNotFoundException(ProductNotFoundInWarehouseException e) {
+    public ErrorResponse handleProductNotFoundException(RuntimeException e) {
         log.error("404 {}", e.getMessage());
         return ErrorResponse.builder()
                 .cause(e.getCause())

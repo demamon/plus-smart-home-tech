@@ -3,17 +3,17 @@ package ru.yandex.practicum.warehouse.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartResponseDto;
-import ru.yandex.practicum.interaction.api.dto.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.interaction.api.dto.warehouse.AddressDto;
-import ru.yandex.practicum.interaction.api.dto.warehouse.BookedProductsDto;
-import ru.yandex.practicum.interaction.api.dto.warehouse.NewProductInWarehouseRequest;
+import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartDto;
+import ru.yandex.practicum.interaction.api.dto.warehouse.*;
 import ru.yandex.practicum.warehouse.address.Address;
+import ru.yandex.practicum.warehouse.exception.NoBookingFoundException;
 import ru.yandex.practicum.warehouse.exception.NoSpecifiedProductInWarehouseException;
 import ru.yandex.practicum.warehouse.exception.ProductInShoppingCartLowQuantityInWarehouseException;
 import ru.yandex.practicum.warehouse.exception.SpecifiedProductAlreadyInWarehouseException;
 import ru.yandex.practicum.warehouse.mapper.WarehouseMapper;
+import ru.yandex.practicum.warehouse.model.Booking;
 import ru.yandex.practicum.warehouse.model.Warehouse;
+import ru.yandex.practicum.warehouse.repository.BookingRepository;
 import ru.yandex.practicum.warehouse.repository.WarehouseRepository;
 
 import java.util.*;
@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class WarehouseServiceImpl implements WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final WarehouseMapper warehouseMapper;
+    private final BookingRepository bookingRepository;
 
     @Override
     public void addProduct(NewProductInWarehouseRequest request) {
@@ -37,8 +38,8 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    public BookedProductsDto checkCountProducts(ShoppingCartResponseDto shoppingCartResponseDto) {
-        Map<UUID, Integer> cartProducts = shoppingCartResponseDto.getProducts();
+    public BookedProductsDto checkCountProducts(ShoppingCartDto shoppingCartDto) {
+        Map<UUID, Integer> cartProducts = shoppingCartDto.getProducts();
 
         Map<UUID, Warehouse> warehouseProducts = validateAndCheckQuantities(cartProducts);
         return calculateBookingInfo(warehouseProducts, cartProducts);
@@ -67,6 +68,52 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .house(address)
                 .flat(address)
                 .build();
+    }
+
+    @Override
+    public BookedProductsDto assemblyProducts(AssemblyProductsForOrderRequest request) {
+        Map<UUID, Warehouse> warehouseProducts = validateAndCheckQuantities(request.getProducts());
+
+        BookedProductsDto bookingInfo = calculateBookingInfo(warehouseProducts, request.getProducts());
+
+        warehouseProducts.forEach((productId, warehouseProduct) -> {
+            Integer requiredQuantity = request.getProducts().get(productId);
+            warehouseProduct.setQuantity(warehouseProduct.getQuantity() - requiredQuantity);
+            warehouseRepository.save(warehouseProduct);
+        });
+
+        Booking booking = Booking.builder()
+                .orderId(request.getOrderId())
+                .deliveryVolume(bookingInfo.getDeliveryVolume())
+                .deliveryWeight(bookingInfo.getDeliveryWeight())
+                .fragile(bookingInfo.getFragile())
+                .products(new HashMap<>(request.getProducts()))
+                .build();
+
+        Booking savedBooking = bookingRepository.save(booking);
+        return bookingInfo;
+    }
+
+    @Override
+    public void shippedDelivery(ShippedToDeliveryRequest request) {
+        Booking booking = bookingRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new NoBookingFoundException("заказ с id = " + request.getOrderId() + " не найден"));
+        booking.setDeliveryId(request.getDeliveryId());
+        bookingRepository.save(booking);
+    }
+
+    @Override
+    public void returnProducts(Map<UUID, Integer> returnProducts) {
+        List<Warehouse> warehouseProducts = warehouseRepository.findAllById(returnProducts.keySet());
+        List<Warehouse> productsToUpdate = new ArrayList<>();
+        warehouseProducts.forEach(warehouseProduct -> {
+            Integer returnQuantity = returnProducts.get(warehouseProduct.getProductId());
+            if (returnQuantity != null && returnQuantity > 0) {
+                warehouseProduct.setQuantity(warehouseProduct.getQuantity() + returnQuantity);
+                productsToUpdate.add(warehouseProduct);
+            }
+        });
+        warehouseRepository.saveAll(productsToUpdate);
     }
 
     private Map<UUID, Warehouse> validateAndCheckQuantities(Map<UUID, Integer> cartProducts) {

@@ -8,7 +8,7 @@ import ru.yandex.practicum.interaction.api.feign.WarehouseClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients(clients = {WarehouseClient.class})
+@EnableFeignClients("ru.yandex.practicum.interaction.api.feign")
 public class ShoppingCartApplication {
     public static void main(String[] args) {
         SpringApplication.run(ShoppingCartApplication.class, args);

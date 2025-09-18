@@ -4,12 +4,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartResponseDto;
-import ru.yandex.practicum.interaction.api.dto.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.interaction.api.dto.warehouse.AddressDto;
-import ru.yandex.practicum.interaction.api.dto.warehouse.BookedProductsDto;
-import ru.yandex.practicum.interaction.api.dto.warehouse.NewProductInWarehouseRequest;
+import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartDto;
+import ru.yandex.practicum.interaction.api.dto.warehouse.*;
 import ru.yandex.practicum.warehouse.service.WarehouseService;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/warehouse")
@@ -26,8 +26,8 @@ public class WarehouseController {
 
     @PostMapping("/check")
     @ResponseStatus(HttpStatus.OK)
-    public BookedProductsDto checkCountProducts(@RequestBody @Valid ShoppingCartResponseDto shoppingCartResponseDto) {
-        return warehouseService.checkCountProducts(shoppingCartResponseDto);
+    public BookedProductsDto checkCountProducts(@RequestBody @Valid ShoppingCartDto shoppingCartDto) {
+        return warehouseService.checkCountProducts(shoppingCartDto);
     }
 
     @PostMapping("/add")
@@ -38,5 +38,23 @@ public class WarehouseController {
     @GetMapping("/address")
     public AddressDto getAddress() {
         return warehouseService.getAddress();
+    }
+
+    @PostMapping("/assembly")
+    @ResponseStatus(HttpStatus.OK)
+    public BookedProductsDto assemblyProducts(@RequestBody @Valid AssemblyProductsForOrderRequest request) {
+        return warehouseService.assemblyProducts(request);
+    }
+
+    @PostMapping("/shipped")
+    @ResponseStatus(HttpStatus.OK)
+    public void shippedDelivery(@RequestBody @Valid ShippedToDeliveryRequest request) {
+        warehouseService.shippedDelivery(request);
+    }
+
+    @PostMapping("/return")
+    @ResponseStatus(HttpStatus.OK)
+    public void returnProducts(@RequestBody Map<UUID, Integer> returnProducts) {
+        warehouseService.returnProducts(returnProducts);
     }
 }

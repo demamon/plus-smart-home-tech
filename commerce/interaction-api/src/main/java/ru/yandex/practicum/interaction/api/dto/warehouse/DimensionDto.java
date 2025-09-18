@@ -1,19 +1,19 @@
 package ru.yandex.practicum.interaction.api.dto.warehouse;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DimensionDto {
-    @NonNull
+    @NotNull
     Double width;
-    @NonNull
+    @NotNull
     Double height;
-    @NonNull
+    @NotNull
     Double depth;
 }

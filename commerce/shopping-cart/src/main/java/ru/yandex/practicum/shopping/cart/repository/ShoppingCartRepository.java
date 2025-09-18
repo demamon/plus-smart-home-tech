@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.shopping.cart.model.ShoppingCart;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +13,6 @@ public interface ShoppingCartRepository extends JpaRepository<ShoppingCart, UUID
     Optional<ShoppingCart> findByUsernameAndActiveTrue(String username);
 
     ShoppingCart findByUsername(String username);
+
+    List<ShoppingCart> findAllByUsername(String username);
 }

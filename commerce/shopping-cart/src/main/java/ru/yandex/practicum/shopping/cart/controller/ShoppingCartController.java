@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.interaction.api.dto.cart.ChangeProductQuantityRequest;
-import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartResponseDto;
+import ru.yandex.practicum.interaction.api.dto.cart.ShoppingCartDto;
 import ru.yandex.practicum.shopping.cart.service.ShoppingCartService;
 
 import java.util.List;
@@ -21,13 +21,13 @@ public class ShoppingCartController {
     private final ShoppingCartService shoppingCartService;
 
     @PutMapping
-    public ShoppingCartResponseDto addProducts(@RequestParam @NotBlank String username,
-                                               @RequestBody Map<UUID, Integer> request) {
+    public ShoppingCartDto addProducts(@RequestParam @NotBlank String username,
+                                       @RequestBody Map<UUID, Integer> request) {
         return shoppingCartService.addProducts(username, request);
     }
 
     @GetMapping
-    public ShoppingCartResponseDto getShoppingCart(@RequestParam @NotBlank String username) {
+    public ShoppingCartDto getShoppingCart(@RequestParam @NotBlank String username) {
         return shoppingCartService.getShoppingCart(username);
     }
 
@@ -39,16 +39,21 @@ public class ShoppingCartController {
 
     @PostMapping("/remove")
     @ResponseStatus(HttpStatus.OK)
-    public ShoppingCartResponseDto removeProductsFromCart(@RequestParam @NotBlank String username,
-                                                          @RequestBody List<UUID> productId) {
+    public ShoppingCartDto removeProductsFromCart(@RequestParam @NotBlank String username,
+                                                  @RequestBody List<UUID> productId) {
         return shoppingCartService.removeProductsFromCart(username, productId);
     }
 
     @PostMapping("/change-quantity")
     @ResponseStatus(HttpStatus.OK)
-    public ShoppingCartResponseDto changeProductQuantity(@RequestParam @NotBlank String username,
-                                                         @RequestBody @Valid ChangeProductQuantityRequest request) {
+    public ShoppingCartDto changeProductQuantity(@RequestParam @NotBlank String username,
+                                                 @RequestBody @Valid ChangeProductQuantityRequest request) {
         return shoppingCartService.changeProductQuantity(username, request);
+    }
+
+    @GetMapping("/all")
+    public List<ShoppingCartDto> getAllShoppingCartByName(@RequestParam @NotBlank String username) {
+        return shoppingCartService.getAllShoppingCartByName(username);
     }
 
 }
